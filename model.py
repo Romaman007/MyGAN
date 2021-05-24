@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-class ConvBlock(nn.Module):
+class CvBlk(nn.Module):
     def __init__(self, in_channels, out_channels, use_act, **kwargs):
         super().__init__()
         self.cnn = nn.Conv2d(
@@ -25,15 +25,15 @@ class UpsampleBlock(nn.Module):
     def forward(self, x):
         return self.act(self.conv(self.upsample(x)))
 
-class DenseResidualBlock(nn.Module):
-    def __init__(self, in_channels, channels=32, residual_beta=0.2):
+class DenseBlock(nn.Module):
+    def __init__(self, in_channels, channels=32, residual_b=0.205):
         super().__init__()
-        self.residual_beta = residual_beta
+        self.residual_beta = residual_b
         self.blocks = nn.ModuleList()
 
         for i in range(5):
             self.blocks.append(
-                ConvBlock(
+                CvBlk(
                     in_channels + channels * i,
                     channels if i <= 3 else in_channels,
                     kernel_size=3,
@@ -52,10 +52,10 @@ class DenseResidualBlock(nn.Module):
 
 
 class RRDB(nn.Module):
-    def __init__(self, in_channels, residual_beta=0.2):
+    def __init__(self, in_channels, residual_b=0.205):
         super().__init__()
-        self.residual_beta = residual_beta
-        self.rrdb = nn.Sequential(*[DenseResidualBlock(in_channels) for _ in range(3)])
+        self.residual_beta = residual_b
+        self.rrdb = nn.Sequential(*[DenseBlock(in_channels) for _ in range(3)])
 
     def forward(self, x):
         return self.rrdb(x) * self.residual_beta + x
@@ -97,7 +97,7 @@ class Discriminator(nn.Module):
         blocks = []
         for idx, feature in enumerate(features):
             blocks.append(
-                ConvBlock(
+                CvBlk(
                     in_channels,
                     feature,
                     kernel_size=3,
